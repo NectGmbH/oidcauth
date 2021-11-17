@@ -60,11 +60,11 @@ func NewWithContext(ctx context.Context, issuer, clientID string, scopes ...stri
 	}, nil
 }
 
-// LoginWithCache tries to retrieve a refresh token from the system's keyring if present.
+// LoginWithKeyring tries to retrieve a refresh token from the system's keyring if present.
 // If that fails, a browser based login to the oidc issuer is triggered to retrieve a token using loginContext.
 // A http client is then build using httpClientContext as its context and the token for providing automated authentication and refresh.
-// For documentation on the used keyring see StoreTokenInCache.
-func (c *Client) LoginWithCache(loginContext, httpClientContext context.Context) (*http.Client, error) {
+// For documentation on the used keyring see StoreTokenInKeyring.
+func (c *Client) LoginWithKeyring(loginContext, httpClientContext context.Context) (*http.Client, error) {
 	token, err := getTokenFromKeyring(c.issuer, c.clientID)
 	if err != nil {
 		return nil, err
@@ -91,13 +91,13 @@ func getTokenFromKeyring(issuer, clientID string) (*oauth2.Token, error) {
 	}, nil
 }
 
-// StoreTokenInCache extracts an oauth2 token from the http clients transport layer (provided it is a *oauth2.Transport).
+// StoreTokenInKeyring extracts an oauth2 token from the http clients transport layer (provided it is a *oauth2.Transport).
 // The token's refresh token is then stored in the system's keyring.
 // The keyring used is chosen based on GOOS:
 //     Linux: DBus Secret Service (needs default collection "login")
 //     Darwin: /usr/bin/security (OS X keychain)
 //     Windows: Windows Credential Manager
-func (c *Client) StoreTokenInCache(client *http.Client) error {
+func (c *Client) StoreTokenInKeyring(client *http.Client) error {
 	transport, ok := client.Transport.(*oauth2.Transport)
 	if !ok {
 		return ErrNotOAuth2Transport
